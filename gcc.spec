@@ -599,84 +599,84 @@ This package contains Leak Sanitizer static runtime library.
 %else
 %setup -q -n gcc-%{version}-%{DATE} -a 1 -a 2 -a 3
 %endif
-%patch0 -p0 -b .hack~
-%patch2 -p0 -b .i386-libgomp~
-%patch3 -p0 -b .sparc-config-detection~
-%patch4 -p0 -b .libgomp-omp_h-multilib~
-%patch5 -p0 -b .libtool-no-rpath~
+%patch -P 0 -p0 -b .hack~
+%patch -P 2 -p0 -b .i386-libgomp~
+%patch -P 3 -p0 -b .sparc-config-detection~
+%patch -P 4 -p0 -b .libgomp-omp_h-multilib~
+%patch -P 5 -p0 -b .libtool-no-rpath~
 %if %{build_isl}
-%patch6 -p0 -b .isl-dl~
+%patch -P 6 -p0 -b .isl-dl~
 %endif
 %if %{build_libstdcxx_docs}
-%patch7 -p0 -b .libstdc++-docs~
+%patch -P 7 -p0 -b .libstdc++-docs~
 %endif
-%patch8 -p0 -b .no-add-needed~
-%patch9 -p0 -b .foffload-default~
-%patch10 -p0 -b .Wno-format-security~
-%patch11 -p0 -b .rh1512529-aarch64~
-%patch12 -p0 -b .mcet~
-%patch13 -p0 -b .pr85400~
-%patch14 -p0 -b .pr89629~
-%patch15 -p0 -b .pr90139~
-%patch16 -p0 -b .pr90756~
-%patch17 -p0 -b .pr86098~
-%patch18 -p0 -b .rh1760208-1~
-%patch19 -p0 -b .rh1760208-2~
-%patch20 -p0 -b .rh1760208-3~
-%patch21 -p0 -b .rh1760208-4~
+%patch -P 8 -p0 -b .no-add-needed~
+%patch -P 9 -p0 -b .foffload-default~
+%patch -P 10 -p0 -b .Wno-format-security~
+%patch -P 11 -p0 -b .rh1512529-aarch64~
+%patch -P 12 -p0 -b .mcet~
+%patch -P 13 -p0 -b .pr85400~
+%patch -P 14 -p0 -b .pr89629~
+%patch -P 15 -p0 -b .pr90139~
+%patch -P 16 -p0 -b .pr90756~
+%patch -P 17 -p0 -b .pr86098~
+%patch -P 18 -p0 -b .rh1760208-1~
+%patch -P 19 -p0 -b .rh1760208-2~
+%patch -P 20 -p0 -b .rh1760208-3~
+%patch -P 21 -p0 -b .rh1760208-4~
 
-%patch1000 -p0 -b .libstdc++-compat~
+%patch -P 1000 -p0 -b .libstdc++-compat~
 %ifarch %{ix86} x86_64
 %if 0%{?rhel} < 7
 # On i?86/x86_64 there are some incompatibilities in _Decimal* as well as
 # aggregates containing larger vector passing.
-%patch1001 -p0 -b .alt-compat-test~
+%patch -P 1001 -p0 -b .alt-compat-test~
 %endif
 %endif
 %if %{build_isl}
-%patch1004 -p0 -b .isl-dl2~
+%patch -P 1004 -p0 -b .isl-dl2~
 %endif
 %if 0%{?rhel} == 6
-%patch1005 -p0 -b .s390x-libsanitizer~
+%patch -P 1005 -p0 -b .s390x-libsanitizer~
 %endif
 
 %if %{build_libstdcxx_docs}
 %if 0%{?rhel} < 7
 cd doxygen-%{doxygen_version}
-%patch2001 -p1 -b .config~
-%patch2002 -p1 -b .timestamp~
-%patch2003 -p1 -b .rh856725~
+%patch -P 2001 -p1 -b .config~
+%patch -P 2002 -p1 -b .timestamp~
+%patch -P 2003 -p1 -b .rh856725~
 cd ..
 %endif
 %endif
 
 %if 0%{?rhel} <= 7
-%patch3003 -p1 -b .fortran03~
-%patch3001 -p1 -b .fortran01~
-%patch3002 -p1 -b .fortran02~
-%patch3004 -p1 -b .fortran04~
-%patch3005 -p1 -b .fortran05~
-%patch3006 -p1 -b .fortran06~
-%patch3007 -p1 -b .fortran07~
-%patch3008 -p1 -b .fortran08~
-%patch3009 -p1 -b .fortran09~
-%patch3010 -p1 -b .fortran10~
-%patch3011 -p1 -b .fortran11~
-%patch3012 -p1 -b .fortran12~
-%patch3013 -p1 -b .fortran13~
-%patch3014 -p1 -b .fortran14~
-%patch3016 -p1 -b .fortran16~
-%patch3017 -p1 -b .fortran17~
-%patch3018 -p1 -b .fortran18~
-%patch3019 -p1 -b .fortran19~
-%patch3022 -p1 -b .fortran22~
-%patch3023 -p1 -b .fortran23~
-%patch3025 -p1 -b .fortran25~
-%patch3026 -p1 -b .fortran26~
-%patch3027 -p1 -b .fortran27~
-%patch3028 -p1 -b .fortran28~
-%patch3029 -p1 -b .fortran29~
-%patch3030 -p1 -b .fortran30~
+%patch -P 3003 -p1 -b .fortran03~
+%patch -P 3001 -p1 -b .fortran01~
+%patch -P 3002 -p1 -b .fortran02~
+%patch -P 3004 -p1 -b .fortran04~
+%patch -P 3005 -p1 -b .fortran05~
+%patch -P 3006 -p1 -b .fortran06~
+%patch -P 3007 -p1 -b .fortran07~
+%patch -P 3008 -p1 -b .fortran08~
+%patch -P 3009 -p1 -b .fortran09~
+%patch -P 3010 -p1 -b .fortran10~
+%patch -P 3011 -p1 -b .fortran11~
+%patch -P 3012 -p1 -b .fortran12~
+%patch -P 3013 -p1 -b .fortran13~
+%patch -P 3014 -p1 -b .fortran14~
+%patch -P 3016 -p1 -b .fortran16~
+%patch -P 3017 -p1 -b .fortran17~
+%patch -P 3018 -p1 -b .fortran18~
+%patch -P 3019 -p1 -b .fortran19~
+%patch -P 3022 -p1 -b .fortran22~
+%patch -P 3023 -p1 -b .fortran23~
+%patch -P 3025 -p1 -b .fortran25~
+%patch -P 3026 -p1 -b .fortran26~
+%patch -P 3027 -p1 -b .fortran27~
+%patch -P 3028 -p1 -b .fortran28~
+%patch -P 3029 -p1 -b .fortran29~
+%patch -P 3030 -p1 -b .fortran30~
 %endif
 
 echo 'Red Hat %{version}-%{gcc_release}' > gcc/DEV-PHASE
