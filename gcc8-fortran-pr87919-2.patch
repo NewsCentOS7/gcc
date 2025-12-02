@@ -1,0 +1,87 @@
+2018-12-03  Fritz Reese  <fritzoreese@gmail.com>
+	    Mark Eggleston  <mark.eggleston@codethink.co.uk>
+ 
+ 	PR fortran/87919
+ 	* options.c (SET_FLAG, SET_BITFLAG, SET_BITFLAG2): New macros.
+ 	(set_dec_flags): Set/unset DEC and std flags according to value.
+	(post_dec_flags, set_init_local_zero): New functions.
+	(gfc_init_options): Use set_init_local_zero and post_dec_flags.
+	(gfc_handle_options) <case OPT_fcheck_array_temporaries>: Use
+	SET_BITFLAG.
+	<case OPT_finit_local_zero>: Use set_init_local_zero.
+	<case OPT_fdec>: Pass value to set_dec_flags.
+	<case OPT_fdec_structure>: Remove.
+ 
+diff --git a/gcc/fortran/options.c b/gcc/fortran/options.c
+index b35bed32974..48e35e3524d 100644
+--- a/gcc/fortran/options.c
++++ b/gcc/fortran/options.c
+@@ -147,11 +147,7 @@ gfc_init_options (unsigned int decoded_options_count,
+ 
+   gfc_option.flag_preprocessed = 0;
+   gfc_option.flag_d_lines = -1;
+-  gfc_option.flag_init_integer = GFC_INIT_INTEGER_OFF;
+-  gfc_option.flag_init_integer_value = 0;
+-  gfc_option.flag_init_logical = GFC_INIT_LOGICAL_OFF;
+-  gfc_option.flag_init_character = GFC_INIT_CHARACTER_OFF;
+-  gfc_option.flag_init_character_value = (char)0;
++  set_init_local_zero (0);
+   
+   gfc_option.fpe = 0;
+   /* All except GFC_FPE_INEXACT.  */
+@@ -261,6 +257,9 @@ gfc_post_options (const char **pfilename)
+   char *source_path;
+   int i;
+ 
++  /* Finalize DEC flags.  */
++  post_dec_flags (flag_dec);
++
+   /* Excess precision other than "fast" requires front-end
+      support.  */
+   if (flag_excess_precision_cmdline == EXCESS_PRECISION_STANDARD)
+@@ -644,7 +643,7 @@ gfc_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value,
+       break;
+ 
+     case OPT_fcheck_array_temporaries:
+-      gfc_option.rtcheck |= GFC_RTCHECK_ARRAY_TEMPS;
++      SET_BITFLAG (gfc_option.rtcheck, value, GFC_RTCHECK_ARRAY_TEMPS);
+       break;
+       
+     case OPT_fd_lines_as_code:
+@@ -694,12 +693,7 @@ gfc_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value,
+       break;
+ 
+     case OPT_finit_local_zero:
+-      gfc_option.flag_init_integer = GFC_INIT_INTEGER_ON;
+-      gfc_option.flag_init_integer_value = 0;
+-      flag_init_real = GFC_INIT_REAL_ZERO;
+-      gfc_option.flag_init_logical = GFC_INIT_LOGICAL_FALSE;
+-      gfc_option.flag_init_character = GFC_INIT_CHARACTER_ON;
+-      gfc_option.flag_init_character_value = (char)0;
++      set_init_local_zero (value);
+       break;
+ 
+     case OPT_finit_logical_:
+@@ -798,12 +792,8 @@ gfc_handle_option (size_t scode, const char *arg, HOST_WIDE_INT value,
+       break;
+ 
+     case OPT_fdec:
+-      /* Enable all DEC extensions.  */
+-      set_dec_flags (1);
+-      break;
+-
+-    case OPT_fdec_structure:
+-      flag_dec_structure = 1;
++      /* Set (or unset) the DEC extension flags.  */
++      set_dec_flags (value);
+       break;
+     }
+ 
+@@ -895,3 +885,7 @@ gfc_get_option_string (void)
+   result[--pos] = '\0';
+   return result;
+ }
++
++#undef SET_BITFLAG
++#undef SET_BITFLAG2
++#undef SET_FLAG

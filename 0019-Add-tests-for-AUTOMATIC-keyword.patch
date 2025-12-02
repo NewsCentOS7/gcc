@@ -1,0 +1,35 @@
+From 52e49e5edaf2c4de5974b42dd359c0f57546c640 Mon Sep 17 00:00:00 2001
+From: Mark Doffman <mark.doffman@codethink.co.uk>
+Date: Thu, 5 Jun 2014 20:47:51 +0000
+Subject: [PATCH 19/23] Add tests for AUTOMATIC keyword
+
+These tests were written by Mark Doffman for his own implementation of
+the AUTOMATIC keyword. Since then, Fritz Reese's implementation was
+merged upstream so we no longer carry Mark's patches but the tests
+may add some useful extra test coverage. Or they might not.
+---
+ gcc/testsuite/gfortran.dg/automatic_1.f90      | 31 ++++++++++++++++++++++++++
+ gcc/testsuite/gfortran.dg/automatic_common.f90 |  6 +++++
+ gcc/testsuite/gfortran.dg/automatic_repeat.f90 |  8 +++++++
+ gcc/testsuite/gfortran.dg/automatic_save.f90   |  8 +++++++
+ 4 files changed, 53 insertions(+)
+ create mode 100644 gcc/testsuite/gfortran.dg/automatic_1.f90
+ create mode 100644 gcc/testsuite/gfortran.dg/automatic_common.f90
+ create mode 100644 gcc/testsuite/gfortran.dg/automatic_repeat.f90
+ create mode 100644 gcc/testsuite/gfortran.dg/automatic_save.f90
+
+diff --git a/gcc/testsuite/gfortran.dg/automatic_common.f90 b/gcc/testsuite/gfortran.dg/automatic_common.f90
+new file mode 100644
+index 0000000..5ec016f
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/automatic_common.f90
+@@ -0,0 +1,6 @@
++! { dg-do compile }
++! { dg-options "-fdec-static" }
++! A common variable may not have the AUTOMATIC attribute.
++INTEGER, AUTOMATIC :: X
++COMMON /COM/ X ! { dg-error "conflicts with AUTOMATIC attribute" }
++END
+-- 
+2.9.5
+

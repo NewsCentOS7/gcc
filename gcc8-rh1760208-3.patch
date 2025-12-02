@@ -1,0 +1,34 @@
+commit ff12f8b9ae10bf7270ec7ead28a479f6105058eb
+Author: Segher Boessenkool <segher@kernel.crashing.org>
+Date:   Fri Aug 30 16:17:20 2019 +0200
+
+    backport: re PR target/91481 (POWER9 "DARN" RNG intrinsic produces repeated output (CVE-2019-15847))
+    
+            Backport from trunk
+            2019-08-23  Segher Boessenkool  <segher@kernel.crashing.org>
+    
+    gcc/testsuite/
+            PR target/91481
+            * gcc.target/powerpc/darn-3.c: New testcase.
+    
+    From-SVN: r275182
+
+--- /dev/null
++++ gcc/testsuite/gcc.target/powerpc/darn-3.c
+@@ -0,0 +1,16 @@
++/* { dg-do compile { target { powerpc*-*-* } } } */
++/* { dg-skip-if "" { powerpc*-*-aix* } } */
++/* { dg-options "-O2 -mdejagnu-cpu=power9" } */
++
++static int darn32(void) { return __builtin_darn_32(); }
++
++int four(void)
++{
++	int sum = 0;
++	int i;
++	for (i = 0; i < 4; i++)
++		sum += darn32();
++	return sum;
++}
++
++/* { dg-final { scan-assembler-times {(?n)\mdarn .*,0\M} 4 } } */

@@ -1,0 +1,54 @@
+From d1bb76287ec58fdde7ced70088559136555bd7bd Mon Sep 17 00:00:00 2001
+From: Jim MacArthur <jim.macarthur@codethink.co.uk>
+Date: Fri, 11 Dec 2015 17:04:09 +0000
+Subject: [PATCH 03/23] Add -std=extra-legacy
+
+
+        0003-Add-std-extra-legacy.patch
+    
+        0023-Add-a-full-stop-to-the-std-extra-legacy-help-text.patch
+
+diff --git a/gcc/fortran/lang.opt b/gcc/fortran/lang.opt
+index 4421ce4..4808c27 100644
+--- a/gcc/fortran/lang.opt
++++ b/gcc/fortran/lang.opt
+@@ -790,6 +790,10 @@ std=legacy
+ Fortran
+ Accept extensions to support legacy code.
+ 
++std=extra-legacy
++Fortran
++Accept even more legacy extensions, including things disallowed in f90.
++
+ undef
+ Fortran
+ ; Documented in C
+diff --git a/gcc/fortran/libgfortran.h b/gcc/fortran/libgfortran.h
+index c5ff992..dcc923b 100644
+--- a/gcc/fortran/libgfortran.h
++++ b/gcc/fortran/libgfortran.h
+@@ -22,6 +22,7 @@ along with GCC; see the file COPYING3.
+    Note that no features were obsoleted nor deleted in F2003.
+    Please remember to keep those definitions in sync with
+    gfortran.texi.  */
++#define GFC_STD_EXTRA_LEGACY	(1<<13)	/* Even more backward compatibility.  */
+ #define GFC_STD_F2018_DEL      (1<<12)  /* Deleted in F2018.  */
+ #define GFC_STD_F2018_OBS      (1<<11)  /* Obsolescent in F2018.  */
+ #define GFC_STD_F2018          (1<<10)  /* New in F2018.  */
+diff --git a/gcc/fortran/options.c b/gcc/fortran/options.c
+index 1af76aa..9ebf8e3 100644
+--- a/gcc/fortran/options.c
++++ b/gcc/fortran/options.c
+@@ -733,6 +733,12 @@ gfc_handle_option (size_t scode, const char *arg, int value,
+       gfc_option.warn_std = 0;
+       break;
+ 
++    case OPT_std_extra_legacy:
++      set_default_std_flags ();
++      gfc_option.warn_std = 0;
++      gfc_option.allow_std |= GFC_STD_EXTRA_LEGACY;
++      break;
++
+     case OPT_fshort_enums:
+       /* Handled in language-independent code.  */
+       break;

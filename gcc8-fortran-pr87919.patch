@@ -1,0 +1,419 @@
+2018-12-03  Fritz Reese  <fritzoreese@gmail.com>
+            Mark Eggleston <mark.eggleston@codethink.co.uk>
+
+	PR fortran/87919
+	* options.c (SET_FLAG, SET_BITFLAG, SET_BITFLAG2): New macros.
+	(set_dec_flags): Set/unset DEC and std flags according to value.
+	(set_init_local_zero): New helper for -finit-local-zero flag group.
+	(gfc_init_options): Fix disabling of init flags, array temporaries
+	check, and dec flags when value is zero (from -fno-*).
+
+diff --git a/gcc/fortran/options.c b/gcc/fortran/options.c
+index e59ba31ba7b..b35bed32974 100644
+--- a/gcc/fortran/options.c
++++ b/gcc/fortran/options.c
+@@ -32,6 +32,20 @@ along with GCC; see the file COPYING3.  If not see
+ 
+ gfc_option_t gfc_option;
+ 
++#define SET_FLAG(flag, condition, on_value, off_value) \
++  do \
++    { \
++      if (condition) \
++	flag = (on_value); \
++      else \
++	flag = (off_value); \
++    } while (0)
++
++#define SET_BITFLAG2(m) m
++
++#define SET_BITFLAG(flag, condition, value) \
++  SET_BITFLAG2 (SET_FLAG (flag, condition, (flag | (value)), (flag & ~(value))))
++
+ 
+ /* Set flags that control warnings and errors for different
+    Fortran standards to their default values.  Keep in sync with
+@@ -47,30 +61,55 @@ set_default_std_flags (void)
+   gfc_option.warn_std = GFC_STD_F95_DEL | GFC_STD_LEGACY;
+ }
+ 
+-
+-/* Set all the DEC extension flags.  */
++/* Set (or unset) the DEC extension flags.  */
+ 
+ static void
+ set_dec_flags (int value)
+ {
++  /* Set (or unset) other DEC compatibility extensions.  */
++  SET_BITFLAG (flag_dollar_ok, value, value);
++  SET_BITFLAG (flag_cray_pointer, value, value);
++  SET_BITFLAG (flag_dec_structure, value, value);
++  SET_BITFLAG (flag_dec_intrinsic_ints, value, value);
++  SET_BITFLAG (flag_dec_static, value, value);
++  SET_BITFLAG (flag_dec_math, value, value);
++  SET_BITFLAG (flag_dec_include, value, value);
++}
++
++/* Finalize DEC flags.  */
++
++static void
++post_dec_flags (int value)
++{
++  /* Don't warn for legacy code if -fdec is given; however, setting -fno-dec
++     does not force these warnings.  We make one final determination on this
++     at the end because -std= is always set first; thus, we can avoid
++     clobbering the user's desired standard settings in gfc_handle_option
++     e.g. when -fdec and -fno-dec are both given.  */
+   if (value)
+     {
+-      /* Allow legacy code without warnings.  */
+       gfc_option.allow_std |= GFC_STD_F95_OBS | GFC_STD_F95_DEL
+-        | GFC_STD_GNU | GFC_STD_LEGACY;
++	| GFC_STD_GNU | GFC_STD_LEGACY;
+       gfc_option.warn_std &= ~(GFC_STD_LEGACY | GFC_STD_F95_DEL);
+     }
+-
+-  /* Set other DEC compatibility extensions.  */
+-  flag_dollar_ok |= value;
+-  flag_cray_pointer |= value;
+-  flag_dec_structure |= value;
+-  flag_dec_intrinsic_ints |= value;
+-  flag_dec_static |= value;
+-  flag_dec_math |= value;
+-  flag_dec_include |= value;
+ }
+ 
++/* Enable (or disable) -finit-local-zero.  */
++
++static void
++set_init_local_zero (int value)
++{
++  gfc_option.flag_init_integer_value = 0;
++  gfc_option.flag_init_character_value = (char)0;
++
++  SET_FLAG (gfc_option.flag_init_integer, value, GFC_INIT_INTEGER_ON,
++	    GFC_INIT_INTEGER_OFF);
++  SET_FLAG (gfc_option.flag_init_logical, value, GFC_INIT_LOGICAL_FALSE,
++	    GFC_INIT_LOGICAL_OFF);
++  SET_FLAG (gfc_option.flag_init_character, value, GFC_INIT_CHARACTER_ON,
++	    GFC_INIT_CHARACTER_OFF);
++  SET_FLAG (flag_init_real, value, GFC_INIT_REAL_ZERO, GFC_INIT_REAL_OFF);
++}
+ 
+ /* Return language mask for Fortran options.  */
+ 
+diff --git a/gcc/testsuite/gfortran.dg/array_temporaries_5.f90 b/gcc/testsuite/gfortran.dg/array_temporaries_5.f90
+new file mode 100644
+index 00000000000..dd147ba38ed
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/array_temporaries_5.f90
+@@ -0,0 +1,10 @@
++! { dg-do run }
++! { dg-options "-fcheck-array-temporaries -fno-check-array-temporaries" }
++!
++! PR fortran/87919
++!
++! Ensure -fno-check-array-temporaries disables array temporary checking.
++!
++
++! Note that 'include' drops the dg-output check from the original test case.
++include 'array_temporaries_2.f90'
+diff --git a/gcc/testsuite/gfortran.dg/dec_bitwise_ops_3.f90 b/gcc/testsuite/gfortran.dg/dec_bitwise_ops_3.f90
+new file mode 100644
+index 00000000000..c28cf81fc04
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_bitwise_ops_3.f90
+@@ -0,0 +1,29 @@
++! { dg-do compile }
++! { dg-options "-std=legacy -fdec -fno-dec" }
++!
++! PR fortran/87919
++!
++! Make sure -fno-dec disables bitwise ops and check for the right errors.
++! -std=legacy is added to avoid the .XOR. extension warning.
++!
++
++include 'dec_bitwise_ops_1.f90'
++
++! { dg-error "Operands of logical operator" " " { target *-*-* } 33 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 34 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 35 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 46 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 47 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 48 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 59 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 60 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 61 }
++! { dg-error "Operand of .not. operator" " " { target *-*-* } 72 }
++! { dg-error "Operand of .not. operator" " " { target *-*-* } 73 }
++! { dg-error "Operand of .not. operator" " " { target *-*-* } 74 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 85 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 86 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 87 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 98 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 99 }
++! { dg-error "Operands of logical operator" " " { target *-*-* } 100 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_d_lines_3.f b/gcc/testsuite/gfortran.dg/dec_d_lines_3.f
+new file mode 100644
+index 00000000000..2df4341c0e4
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_d_lines_3.f
+@@ -0,0 +1,14 @@
++! { dg-do compile }
++! { dg-options "-ffixed-form -fdec -fno-dec" }
++!
++! PR fortran/87919
++!
++! Ensure -fno-dec disables -fdec, leaving d-lines as code by default.
++!
++
++include 'dec_d_lines_2.f'
++
++! { dg-error "character in statement label" " " { target *-*-*} 6 }
++! { dg-error "Unclassifiable statement" " " { target *-*-*} 6 }
++! { dg-error "character in statement label" " " { target *-*-*} 7 }
++! { dg-error "Unclassifiable statement" " " { target *-*-*} 7 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_exp_4.f90 b/gcc/testsuite/gfortran.dg/dec_exp_4.f90
+new file mode 100644
+index 00000000000..9d8b10db6a7
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_exp_4.f90
+@@ -0,0 +1,12 @@
++! { dg-do compile }
++! { dg-options "-fdec -fno-dec" }
++!
++! PR fortran/87919
++!
++! Make sure -fno-dec disables -fdec as with dec_exp_2.
++!
++
++include 'dec_exp_2.f90'
++
++! { dg-error "Missing exponent" "" { target *-*-* } 9 }
++! { dg-error "Missing exponent" "" { target *-*-* } 11 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_exp_5.f90 b/gcc/testsuite/gfortran.dg/dec_exp_5.f90
+new file mode 100644
+index 00000000000..faf3a9b306b
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_exp_5.f90
+@@ -0,0 +1,11 @@
++! { dg-do run "xfail *-*-*" }
++! { dg-options "-fdec -fno-dec" }
++!
++! PR fortran/87919
++!
++! Make sure -fno-dec disables -fdec as with dec_exp_3.
++!
++
++include 'dec_exp_3.f90'
++
++! { XFAIL "Bad real number" "" { target *-*-* } 13 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_io_7.f90 b/gcc/testsuite/gfortran.dg/dec_io_7.f90
+new file mode 100644
+index 00000000000..4a931c15fe7
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_io_7.f90
+@@ -0,0 +1,20 @@
++! { dg-do compile }
++! { dg-options "-fdec -fno-dec" }
++!
++! PR fortran/87919
++!
++! Make sure -fno-dec rejects -fdec I/O specifiers as with dec_io_1.
++!
++
++include 'dec_io_1.f90'
++
++! { dg-error "is a DEC extension" "" { target *-*-* } 12 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 24 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 58 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 64 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 68 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 74 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 78 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 84 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 90 }
++! { dg-error "is a DEC extension" "" { target *-*-* } 96 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_structure_24.f90 b/gcc/testsuite/gfortran.dg/dec_structure_24.f90
+new file mode 100644
+index 00000000000..02842b315dc
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_structure_24.f90
+@@ -0,0 +1,32 @@
++! { dg-do compile }
++!
++! PR fortran/87919
++!
++! Should fail to compile without the -fdec or -fdec-structure options.
++!
++! Contributed by Mark Eggleston <mark.eggleston@codethink.com>
++
++include 'dec_structure_1.f90'
++
++! { dg-error "-fdec-structure" " " { target *-*-* } 14 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 19 }
++! { dg-error "-fdec-structure" " " { target *-*-* } 21 }
++! { dg-error "-fdec-structure" " " { target *-*-* } 22 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 25 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 26 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 27 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 28 }
++! { dg-error "is not a variable" " " { target *-*-* } 30 }
++! { dg-error "Bad character" " " { target *-*-* } 32 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 34 }
++! { dg-error "Bad character" " " { target *-*-* } 36 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 38 }
++! { dg-error "Bad character" " " { target *-*-* } 40 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 42 }
++! { dg-error "Bad character" " " { target *-*-* } 44 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 46 }
++! { dg-error "Bad character" " " { target *-*-* } 48 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 50 }
++! { dg-error "Bad character" " " { target *-*-* } 52 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 54 }
++! { dg-error "function result" " " { target *-*-* } 29 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_structure_25.f90 b/gcc/testsuite/gfortran.dg/dec_structure_25.f90
+new file mode 100644
+index 00000000000..a64d85a88a4
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_structure_25.f90
+@@ -0,0 +1,11 @@
++! { dg-do run }
++! { dg-options "-fdec" }
++!
++! PR fortran/87919
++!
++! Should compile and run with the -fdec option.
++!
++! Contributed by Mark Eggleston <mark.eggleston@codethink.com>
++!
++
++include 'dec_structure_1.f90'
+diff --git a/gcc/testsuite/gfortran.dg/dec_structure_26.f90 b/gcc/testsuite/gfortran.dg/dec_structure_26.f90
+new file mode 100644
+index 00000000000..7829103b995
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_structure_26.f90
+@@ -0,0 +1,34 @@
++! { dg-do compile }
++! { dg-options "-fdec -fno-dec-structure" }
++!
++! PR fortran/87919
++!
++! Should fail to compile with -fdec and -fno-dec-structure.
++!
++! Contributed by Mark Eggleston <mark.eggleston@codethink.com>
++!
++
++include 'dec_structure_1.f90'
++
++! { dg-error "-fdec-structure" " " { target *-*-* } 14 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 19 }
++! { dg-error "-fdec-structure" " " { target *-*-* } 21 }
++! { dg-error "-fdec-structure" " " { target *-*-* } 22 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 25 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 26 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 27 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 28 }
++! { dg-error "is not a variable" " " { target *-*-* } 30 }
++! { dg-error "Bad character" " " { target *-*-* } 32 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 34 }
++! { dg-error "Bad character" " " { target *-*-* } 36 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 38 }
++! { dg-error "Bad character" " " { target *-*-* } 40 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 42 }
++! { dg-error "Bad character" " " { target *-*-* } 44 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 46 }
++! { dg-error "Bad character" " " { target *-*-* } 48 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 50 }
++! { dg-error "Bad character" " " { target *-*-* } 52 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 54 }
++! { dg-error "function result" " " { target *-*-* } 29 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_structure_27.f90 b/gcc/testsuite/gfortran.dg/dec_structure_27.f90
+new file mode 100644
+index 00000000000..1257365deb8
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_structure_27.f90
+@@ -0,0 +1,34 @@
++! { dg-do compile }
++! { dg-options "-fdec-structure -fno-dec-structure" }
++!
++! PR fortran/87919
++!
++! Should fail to compile with -fdec-structure and -fno-dec-structure.
++!
++! Contributed by Mark Eggleston <mark.eggleston@codethink.com>
++!
++
++include 'dec_structure_1.f90'
++
++! { dg-error "-fdec-structure" " " { target *-*-* } 14 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 19 }
++! { dg-error "-fdec-structure" " " { target *-*-* } 21 }
++! { dg-error "-fdec-structure" " " { target *-*-* } 22 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 25 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 26 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 27 }
++! { dg-error "Unclassifiable statement" " " { target *-*-* } 28 }
++! { dg-error "is not a variable" " " { target *-*-* } 30 }
++! { dg-error "Bad character" " " { target *-*-* } 32 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 34 }
++! { dg-error "Bad character" " " { target *-*-* } 36 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 38 }
++! { dg-error "Bad character" " " { target *-*-* } 40 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 42 }
++! { dg-error "Bad character" " " { target *-*-* } 44 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 46 }
++! { dg-error "Bad character" " " { target *-*-* } 48 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 50 }
++! { dg-error "Bad character" " " { target *-*-* } 52 }
++! { dg-error "Expecting END PROGRAM" " " { target *-*-* } 54 }
++! { dg-error "function result" " " { target *-*-* } 29 }
+diff --git a/gcc/testsuite/gfortran.dg/dec_type_print_3.f90 b/gcc/testsuite/gfortran.dg/dec_type_print_3.f90
+new file mode 100644
+index 00000000000..f766bdf0022
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/dec_type_print_3.f90
+@@ -0,0 +1,21 @@
++! { dg-do compile }
++! { dg-options "-fdec -fno-dec" }
++!
++! PR fortran/87919
++!
++! Ensure that -fno-dec disables the usage of TYPE as an alias for PRINT.
++!
++
++include 'dec_type_print.f90'
++
++! { dg-error "Invalid character in name" "" { target *-*-* } 52 }
++! { dg-error "Invalid character in name" "" { target *-*-* } 53 }
++! { dg-error "Invalid character in name" "" { target *-*-* } 54 }
++! { dg-error "Invalid character in name" "" { target *-*-* } 55 }
++! { dg-error "Invalid character in name" "" { target *-*-* } 56 }
++! { dg-error "Invalid character in name" "" { target *-*-* } 57 }
++! { dg-error "Invalid character in name" "" { target *-*-* } 58 }
++! { dg-error "Unclassifiable statement" "" { target *-*-* } 59 }
++! { dg-error "conflicts with PROCEDURE" "" { target *-*-* } 60 }
++! { dg-error "Cannot assign to a named constant" "" { target *-*-* } 80 }
++
+diff --git a/gcc/testsuite/gfortran.dg/init_flag_20.f90 b/gcc/testsuite/gfortran.dg/init_flag_20.f90
+new file mode 100644
+index 00000000000..6f15c1ace0d
+--- /dev/null
++++ b/gcc/testsuite/gfortran.dg/init_flag_20.f90
+@@ -0,0 +1,15 @@
++! { dg-do compile }
++! { dg-options "-fbackslash -finit-local-zero -fno-init-local-zero -fdump-tree-original" }
++!
++! PR fortran/87919
++!
++! Make sure -fno-init-local-zero disables -finit-local-zero.
++!
++
++include 'init_flag_1.f90'
++
++! Make sure no initialization code is generated.
++! { dg-final { scan-tree-dump-times "r\[1-4] *= *\[0\{]" 0 "original" } }
++! { dg-final { scan-tree-dump-times "l\[12] *= *\[0\{]" 0 "original" } }
++! { dg-final { scan-tree-dump-times "i\[1-4] *= *\[0\{]" 0 "original" } }
++! { dg-final { scan-tree-dump-times "memmove *\[(]\[^,]*c\[1-4]" 0 "original" } }

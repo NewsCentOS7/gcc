@@ -1,0 +1,26 @@
+commit 710d6269e1d93d6da1fdf2952f746e35a0a02365
+Author: Segher Boessenkool <segher@kernel.crashing.org>
+Date:   Sat Aug 31 20:58:04 2019 +0200
+
+    rs6000: Fix darn-3.c for GCC 8 and GCC 7
+    
+    Apparently I didn't properly test the testcase backport to GCC 8 and
+    GCC 7.  This makes it not fail there.
+    
+    
+            PR target/91481
+            * gcc.target/powerpc/darn-3.c: Fix testcase.
+    
+    From-SVN: r275244
+
+--- gcc/testsuite/gcc.target/powerpc/darn-3.c
++++ gcc/testsuite/gcc.target/powerpc/darn-3.c
+@@ -1,6 +1,7 @@
+ /* { dg-do compile { target { powerpc*-*-* } } } */
+ /* { dg-skip-if "" { powerpc*-*-aix* } } */
+-/* { dg-options "-O2 -mdejagnu-cpu=power9" } */
++/* { dg-skip-if "do not override -mcpu" { powerpc*-*-* } { "-mcpu=*" } { "-mcpu=power9" } } */
++/* { dg-options "-O2 -mcpu=power9" } */
+ 
+ static int darn32(void) { return __builtin_darn_32(); }
+ 

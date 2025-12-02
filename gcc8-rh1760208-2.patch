@@ -1,0 +1,67 @@
+commit c2894790640da2c0761924ff1b06efddbdfa031e
+Author: Segher Boessenkool <segher@kernel.crashing.org>
+Date:   Fri Aug 30 16:15:39 2019 +0200
+
+    backport: re PR target/91481 (POWER9 "DARN" RNG intrinsic produces repeated output (CVE-2019-15847))
+    
+            Backport from trunk
+            2019-08-22  Segher Boessenkool  <segher@kernel.crashing.org>
+    
+            PR target/91481
+            * config/rs6000/rs6000.md (unspec): Delete UNSPEC_DARN, UNSPEC_DARN_32,
+            and UNSPEC_DARN_RAW.
+            (unspecv): New enumerator values UNSPECV_DARN, UNSPECV_DARN_32, and
+            UNSPECV_DARN_RAW.
+            (darn_32): Use an unspec_volatile, and UNSPECV_DARN_32.
+            (darn_raw): Use an unspec_volatile, and UNSPECV_DARN_RAW.
+            (darn): Use an unspec_volatile, and UNSPECV_DARN.
+    
+    From-SVN: r275181
+
+--- gcc/config/rs6000/rs6000.md
++++ gcc/config/rs6000/rs6000.md
+@@ -136,9 +136,6 @@
+    UNSPEC_LSQ
+    UNSPEC_FUSION_GPR
+    UNSPEC_STACK_CHECK
+-   UNSPEC_DARN
+-   UNSPEC_DARN_32
+-   UNSPEC_DARN_RAW
+    UNSPEC_CMPRB
+    UNSPEC_CMPRB2
+    UNSPEC_CMPEQB
+@@ -168,6 +165,9 @@
+    UNSPECV_EH_RR		; eh_reg_restore
+    UNSPECV_ISYNC		; isync instruction
+    UNSPECV_MFTB			; move from time base
++   UNSPECV_DARN			; darn 1 (deliver a random number)
++   UNSPECV_DARN_32		; darn 2
++   UNSPECV_DARN_RAW		; darn 0
+    UNSPECV_NLGR			; non-local goto receiver
+    UNSPECV_MFFS			; Move from FPSCR
+    UNSPECV_MTFSF		; Move to FPSCR Fields
+@@ -14611,21 +14611,21 @@
+ 
+ (define_insn "darn_32"
+   [(set (match_operand:SI 0 "register_operand" "=r")
+-        (unspec:SI [(const_int 0)] UNSPEC_DARN_32))]
++        (unspec_volatile:SI [(const_int 0)] UNSPECV_DARN_32))]
+   "TARGET_P9_MISC"
+   "darn %0,0"
+   [(set_attr "type" "integer")])
+ 
+ (define_insn "darn_raw"
+   [(set (match_operand:DI 0 "register_operand" "=r")
+-        (unspec:DI [(const_int 0)] UNSPEC_DARN_RAW))]
++        (unspec_volatile:DI [(const_int 0)] UNSPECV_DARN_RAW))]
+   "TARGET_P9_MISC && TARGET_64BIT"
+   "darn %0,2"
+   [(set_attr "type" "integer")])
+ 
+ (define_insn "darn"
+   [(set (match_operand:DI 0 "register_operand" "=r")
+-        (unspec:DI [(const_int 0)] UNSPEC_DARN))]
++        (unspec_volatile:DI [(const_int 0)] UNSPECV_DARN))]
+   "TARGET_P9_MISC && TARGET_64BIT"
+   "darn %0,1"
+   [(set_attr "type" "integer")])
