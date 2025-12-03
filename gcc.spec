@@ -128,7 +128,7 @@ BuildRequires: glibc >= 2.3.90-35
 %endif
 %ifarch %{multilib_64_archs} sparcv9 ppc
 # Ensure glibc{,-devel} is installed for both multilib arches
-BuildRequires: glibc glibc-devel glibc.i686 glibc-devel.i686
+BuildRequires: glibc glibc-devel glibc-i386
 %endif
 %ifarch ia64
 BuildRequires: libunwind >= 0.98
