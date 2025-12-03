@@ -1854,8 +1854,10 @@ fi
 %files
 %{_prefix}/bin/gcc%{!?scl:5}
 %{_prefix}/bin/gcov%{!?scl:5}
-%{_prefix}/bin/gcov-tool%{!?scl:5}
-%{_prefix}/bin/gcov-dump%{!?scl:5}
+#edit#
+#%{_prefix}/bin/gcov-tool%{!?scl:5}
+#%{_prefix}/bin/gcov-dump%{!?scl:5}
+#edit#
 %{_prefix}/bin/gcc-ar%{!?scl:5}
 %{_prefix}/bin/gcc-nm%{!?scl:5}
 %{_prefix}/bin/gcc-ranlib%{!?scl:5}
