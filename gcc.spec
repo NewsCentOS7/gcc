@@ -304,7 +304,7 @@ Patch3030: gcc8-fortran-pr87919-2.patch
 %endif
 
 %description
-The %{?scl_prefix}gcc%{!?scl:5} package contains the GNU Compiler Collection version 7.
+The %{?scl_prefix}gcc package contains the GNU Compiler Collection version 7.
 
 %package -n libgcc
 Summary: GCC version 8 shared support library
@@ -318,13 +318,13 @@ e.g. for exception handling support.
 %package c++
 Summary: C++ support for GCC version 8
 Group: Development/Languages
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 %if 0%{?rhel} >= 7
 Requires: libstdc++
 %else
 Requires: libstdc++ >= 4.4.4-13
 %endif
-Requires: %{?scl_prefix}libstdc++%{!?scl:5}-devel = %{version}-%{release}
+Requires: %{?scl_prefix}libstdc++-devel = %{version}-%{release}
 Autoreq: true
 Autoprov: true
 
@@ -343,7 +343,7 @@ Requires: glibc >= 2.10.90-7
 The libstdc++ package contains a rewritten standard compliant GCC Standard
 C++ Library.
 
-%package -n %{?scl_prefix}libstdc++%{!?scl:5}-devel
+%package -n %{?scl_prefix}libstdc++-devel
 Summary: Header files and libraries for C++ development
 Group: Development/Libraries
 %if 0%{?rhel} >= 7
@@ -355,24 +355,24 @@ Requires: libstdc++%{?_isa}
 Autoreq: true
 Autoprov: true
 
-%description -n %{?scl_prefix}libstdc++%{!?scl:5}-devel
+%description -n %{?scl_prefix}libstdc++-devel
 This is the GNU implementation of the standard C++ libraries.  This
 package includes the header files and libraries needed for C++
 development. This includes rewritten implementation of STL.
 
-%package -n %{?scl_prefix}libstdc++%{!?scl:5}-docs
+%package -n %{?scl_prefix}libstdc++-docs
 Summary: Documentation for the GNU standard C++ library
 Group: Development/Libraries
 Autoreq: true
 
-%description -n %{?scl_prefix}libstdc++%{!?scl:5}-docs
+%description -n %{?scl_prefix}libstdc++-docs
 Manual, doxygen generated API information and Frequently Asked Questions
 for the GNU standard C++ library.
 
 %package gfortran
 Summary: Fortran support for GCC 8
 Group: Development/Languages
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 %if 0%{?rhel} > 7
 Requires: libgfortran >= 8.1.1
 %else
@@ -383,14 +383,14 @@ Autoreq: true
 Autoprov: true
 
 %description gfortran
-The %{?scl_prefix}gcc%{!?scl:5}-gfortran package provides support for compiling Fortran
+The %{?scl_prefix}gcc-gfortran package provides support for compiling Fortran
 programs with the GNU Compiler Collection.
 
 
 %package gdb-plugin
 Summary: GCC 8 plugin for GDB
 Group: Development/Debuggers
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 
 %description gdb-plugin
 This package contains GCC 8 plugin for GDB C expression evaluation.
@@ -398,7 +398,7 @@ This package contains GCC 8 plugin for GDB C expression evaluation.
 %package -n %{?scl_prefix}libgccjit
 Summary: Library for embedding GCC inside programs and libraries
 Group: System Environment/Libraries
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 
 %description -n %{?scl_prefix}libgccjit
 This package contains shared library with GCC 8 JIT front end.
@@ -442,7 +442,7 @@ Requires: %{?scl_prefix}libquadmath = %{version}-%{release}
 Requires: libquadmath
 %endif
 %endif
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 
 %description -n %{?scl_prefix}libquadmath-devel
 This package contains headers for building Fortran programs using
@@ -462,7 +462,7 @@ which is a GCC transactional memory support runtime library.
 Summary: The GNU Transactional Memory support
 Group: Development/Libraries
 Requires: libitm >= 4.7.0-1
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 
 %description -n %{?scl_prefix}libitm-devel
 This package contains headers and support files for the
@@ -471,7 +471,7 @@ GNU Transactional Memory library.
 %package plugin-devel
 Summary: Support for compiling GCC plugins
 Group: Development/Languages
-Requires: %{?scl_prefix}gcc%{!?scl:5} = %{version}-%{release}
+Requires: %{?scl_prefix}gcc = %{version}-%{release}
 Requires: gmp-devel >= 4.1.2-8
 Requires: mpfr-devel >= 2.2.1
 %if 0%{?rhel} >= 7
@@ -1852,25 +1852,25 @@ fi
 %postun -n liblsan -p /sbin/ldconfig
 
 %files
-%{_prefix}/bin/gcc%{!?scl:5}
-%{_prefix}/bin/gcov%{!?scl:5}
+%{_prefix}/bin/gcc
+%{_prefix}/bin/gcov
 #edit#
-#%{_prefix}/bin/gcov-tool%{!?scl:5}
-#%{_prefix}/bin/gcov-dump%{!?scl:5}
+#%{_prefix}/bin/gcov-tool
+#%{_prefix}/bin/gcov-dump
 #edit#
-%{_prefix}/bin/gcc-ar%{!?scl:5}
-%{_prefix}/bin/gcc-nm%{!?scl:5}
-%{_prefix}/bin/gcc-ranlib%{!?scl:5}
+%{_prefix}/bin/gcc-ar
+%{_prefix}/bin/gcc-nm
+%{_prefix}/bin/gcc-ranlib
 %ifarch ppc
-%{_prefix}/bin/%{_target_platform}-gcc%{!?scl:5}
+%{_prefix}/bin/%{_target_platform}-gcc
 %endif
 %ifarch sparc64 sparcv9
-%{_prefix}/bin/sparc-%{_vendor}-%{_target_os}%{?_gnu}-gcc%{!?scl:5}
+%{_prefix}/bin/sparc-%{_vendor}-%{_target_os}%{?_gnu}-gcc
 %endif
 %ifarch ppc64 ppc64p7
-%{_prefix}/bin/ppc-%{_vendor}-%{_target_os}%{?_gnu}-gcc%{!?scl:5}
+%{_prefix}/bin/ppc-%{_vendor}-%{_target_os}%{?_gnu}-gcc
 %endif
-%{_prefix}/bin/%{gcc_target_platform}-gcc%{!?scl:5}
+%{_prefix}/bin/%{gcc_target_platform}-gcc
 %{_prefix}/bin/%{gcc_target_platform}-gcc-%{gcc_major}
 %ifnarch sparc64 ppc64
 %ifarch %{multilib_64_archs}
@@ -2170,8 +2170,8 @@ fi
 %doc gcc/README* rpm.doc/changelogs/gcc/ChangeLog* gcc/COPYING* COPYING.RUNTIME
 
 %files c++
-%{_prefix}/bin/%{gcc_target_platform}-g++%{!?scl:5}
-%{_prefix}/bin/g++%{!?scl:5}
+%{_prefix}/bin/%{gcc_target_platform}-g++
+%{_prefix}/bin/g++
 %if 0%{?scl:1}
 %{_prefix}/bin/%{gcc_target_platform}-c++
 %{_prefix}/bin/c++
@@ -2211,7 +2211,7 @@ fi
 %endif
 %doc rpm.doc/changelogs/gcc/cp/ChangeLog*
 
-%files -n %{?scl_prefix}libstdc++%{!?scl:5}-devel
+%files -n %{?scl_prefix}libstdc++-devel
 %defattr(-,root,root,-)
 %dir %{_prefix}/include/c++
 %{_prefix}/include/c++/%{gcc_major}
@@ -2243,13 +2243,13 @@ fi
 
 
 %if %{build_libstdcxx_docs}
-%files -n %{?scl_prefix}libstdc++%{!?scl:5}-docs
+%files -n %{?scl_prefix}libstdc++-docs
 %{_mandir}/man3/*
 %doc rpm.doc/libstdc++-v3/html
 %endif
 
 %files gfortran
-%{_prefix}/bin/gfortran%{!?scl:5}
+%{_prefix}/bin/gfortran
 %if 0%{?scl:1}
 %{_mandir}/man1/gfortran.1*
 %{_infodir}/gfortran*
