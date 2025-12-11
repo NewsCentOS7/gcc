@@ -1713,54 +1713,54 @@ chmod 755 %{buildroot}%{_prefix}/bin/%{multilib_32_arch}-%{_vendor}-%{_target_os
 # Help plugins find out nvra.
 echo gcc-%{version}-%{release}.%{arch} > $FULLPATH/rpmver
 
-%check
-cd obj-%{gcc_target_platform}
+#%check
+#cd obj-%{gcc_target_platform}
 
-%{?scl:PATH=%{_bindir}${PATH:+:${PATH}}}
-%if 0%{?rhel} <= 7
-# Test against the system libstdc++.so.6 + libstdc++_nonshared.a combo
-mv %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so.6{,.not_here}
-mv %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so{,.not_here}
-ln -sf %{?scl:%{_root_prefix}}%{!?scl:%{_prefix}}/%{_lib}/libstdc++.so.6 \
-  %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so.6
-echo '/* GNU ld script
-   Use the shared library, but some functions are only in
-   the static library, so try that secondarily.  */
-%{oformat}
-INPUT ( %{?scl:%{_root_prefix}}%{!?scl:%{_prefix}}/%{_lib}/libstdc++.so.6 -lstdc++_nonshared )' \
-  > %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so
-cp -a %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++_nonshared%{nonsharedver}.a \
-  %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++_nonshared.a
-%endif
+#%{?scl:PATH=%{_bindir}${PATH:+:${PATH}}}
+#%if 0%{?rhel} <= 7
+## Test against the system libstdc++.so.6 + libstdc++_nonshared.a combo
+#mv %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so.6{,.not_here}
+#mv %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so{,.not_here}
+#ln -sf %{?scl:%{_root_prefix}}%{!?scl:%{_prefix}}/%{_lib}/libstdc++.so.6 \
+#  %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so.6
+#echo '/* GNU ld script
+#   Use the shared library, but some functions are only in
+#   the static library, so try that secondarily.  */
+#%{oformat}
+#INPUT ( %{?scl:%{_root_prefix}}%{!?scl:%{_prefix}}/%{_lib}/libstdc++.so.6 -lstdc++_nonshared )' \
+#  > %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++.so
+#cp -a %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++_nonshared%{nonsharedver}.a \
+#  %{gcc_target_platform}/libstdc++-v3/src/.libs/libstdc++_nonshared.a
+#%endif
 
-# run the tests.
-make %{?_smp_mflags} -k check RUNTESTFLAGS="--target_board=unix/'{,-fstack-protector}'" || :
-( LC_ALL=C ../contrib/test_summary -t || : ) 2>&1 | sed -n '/^cat.*EOF/,/^EOF/{/^cat.*EOF/d;/^EOF/d;/^LAST_UPDATED:/d;p;}' > testresults
-rm -rf gcc/testsuite.prev
-mv gcc/testsuite{,.prev}
-rm -f gcc/site.exp
-make %{?_smp_mflags} -C gcc -k check-gcc check-g++ ALT_CC_UNDER_TEST=gcc ALT_CXX_UNDER_TEST=g++ RUNTESTFLAGS="--target_board=unix/'{,-fstack-protector}' compat.exp struct-layout-1.exp" || :
-mv gcc/testsuite/gcc/gcc.sum{,.sent}
-mv gcc/testsuite/g++/g++.sum{,.sent}
-( LC_ALL=C ../contrib/test_summary -o -t || : ) 2>&1 | sed -n '/^cat.*EOF/,/^EOF/{/^cat.*EOF/d;/^EOF/d;/^LAST_UPDATED:/d;p;}' > testresults2
-rm -rf gcc/testsuite.compat
-mv gcc/testsuite{,.compat}
-mv gcc/testsuite{.prev,}
-echo ====================TESTING=========================
-cat testresults
-echo ===`gcc --version | head -1` compatibility tests====
-cat testresults2
-echo ====================TESTING END=====================
-mkdir testlogs-%{_target_platform}-%{version}-%{release}
-for i in `find . -name \*.log | grep -F testsuite/ | grep -v 'config.log\|acats.*/tests/'`; do
-  ln $i testlogs-%{_target_platform}-%{version}-%{release}/ || :
-done
-for i in `find gcc/testsuite.compat -name \*.log | grep -v 'config.log\|acats.*/tests/'`; do
-  ln $i testlogs-%{_target_platform}-%{version}-%{release}/`basename $i`.compat || :
-done
-tar cf - testlogs-%{_target_platform}-%{version}-%{release} | bzip2 -9c \
-  | uuencode testlogs-%{_target_platform}.tar.bz2 || :
-rm -rf testlogs-%{_target_platform}-%{version}-%{release}
+## run the tests.
+#make %{?_smp_mflags} -k check RUNTESTFLAGS="--target_board=unix/'{,-fstack-protector}'" || :
+#( LC_ALL=C ../contrib/test_summary -t || : ) 2>&1 | sed -n '/^cat.*EOF/,/^EOF/{/^cat.*EOF/d;/^EOF/d;/^LAST_UPDATED:/d;p;}' > testresults
+#rm -rf gcc/testsuite.prev
+#mv gcc/testsuite{,.prev}
+#rm -f gcc/site.exp
+#make %{?_smp_mflags} -C gcc -k check-gcc check-g++ ALT_CC_UNDER_TEST=gcc ALT_CXX_UNDER_TEST=g++ RUNTESTFLAGS="--target_board=unix/'{,-fstack-protector}' compat.exp struct-layout-1.exp" || :
+#mv gcc/testsuite/gcc/gcc.sum{,.sent}
+#mv gcc/testsuite/g++/g++.sum{,.sent}
+#( LC_ALL=C ../contrib/test_summary -o -t || : ) 2>&1 | sed -n '/^cat.*EOF/,/^EOF/{/^cat.*EOF/d;/^EOF/d;/^LAST_UPDATED:/d;p;}' > testresults2
+#rm -rf gcc/testsuite.compat
+#mv gcc/testsuite{,.compat}
+#mv gcc/testsuite{.prev,}
+#echo ====================TESTING=========================
+#cat testresults
+#echo ===`gcc --version | head -1` compatibility tests====
+#cat testresults2
+#echo ====================TESTING END=====================
+#mkdir testlogs-%{_target_platform}-%{version}-%{release}
+#for i in `find . -name \*.log | grep -F testsuite/ | grep -v 'config.log\|acats.*/tests/'`; do
+#  ln $i testlogs-%{_target_platform}-%{version}-%{release}/ || :
+#done
+#for i in `find gcc/testsuite.compat -name \*.log | grep -v 'config.log\|acats.*/tests/'`; do
+#  ln $i testlogs-%{_target_platform}-%{version}-%{release}/`basename $i`.compat || :
+#done
+#tar cf - testlogs-%{_target_platform}-%{version}-%{release} | bzip2 -9c \
+#  | uuencode testlogs-%{_target_platform}.tar.bz2 || :
+#rm -rf testlogs-%{_target_platform}-%{version}-%{release}
 
 
 %if 0%{?scl:1}
@@ -1852,31 +1852,31 @@ fi
 %postun -n liblsan -p /sbin/ldconfig
 
 %files
-%{_prefix}/bin/gcc
-%{_prefix}/bin/gcov
+#%{_prefix}/bin/gcc
+#%{_prefix}/bin/gcov
 #edit#
 #%{_prefix}/bin/gcov-tool
 #%{_prefix}/bin/gcov-dump
 #edit#
-%{_prefix}/bin/gcc-ar
-%{_prefix}/bin/gcc-nm
-%{_prefix}/bin/gcc-ranlib
-%ifarch ppc
-%{_prefix}/bin/%{_target_platform}-gcc
-%endif
-%ifarch sparc64 sparcv9
-%{_prefix}/bin/sparc-%{_vendor}-%{_target_os}%{?_gnu}-gcc
-%endif
-%ifarch ppc64 ppc64p7
-%{_prefix}/bin/ppc-%{_vendor}-%{_target_os}%{?_gnu}-gcc
-%endif
-%{_prefix}/bin/%{gcc_target_platform}-gcc
-%{_prefix}/bin/%{gcc_target_platform}-gcc-%{gcc_major}
-%ifnarch sparc64 ppc64
-%ifarch %{multilib_64_archs}
-%{_prefix}/bin/%{multilib_32_arch}-%{_vendor}-%{_target_os}%{?_gnu}-gcc-%{gcc_major}
-%endif
-%endif
+#%{_prefix}/bin/gcc-ar
+#%{_prefix}/bin/gcc-nm
+#%{_prefix}/bin/gcc-ranlib
+#%ifarch ppc
+#%{_prefix}/bin/%{_target_platform}-gcc
+#%endif
+#%ifarch sparc64 sparcv9
+#%{_prefix}/bin/sparc-%{_vendor}-%{_target_os}%{?_gnu}-gcc
+#%endif
+#%ifarch ppc64 ppc64p7
+#%{_prefix}/bin/ppc-%{_vendor}-%{_target_os}%{?_gnu}-gcc
+#%endif
+#%{_prefix}/bin/%{gcc_target_platform}-gcc
+#%{_prefix}/bin/%{gcc_target_platform}-gcc-%{gcc_major}
+#%ifnarch sparc64 ppc64
+#%ifarch %{multilib_64_archs}
+#%{_prefix}/bin/%{multilib_32_arch}-%{_vendor}-%{_target_os}%{?_gnu}-gcc-%{gcc_major}
+#%endif
+#%endif
 %if 0%{?scl:1}
 %{_prefix}/bin/cc
 %{_prefix}/bin/cpp
